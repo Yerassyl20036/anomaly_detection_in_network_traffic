@@ -12,6 +12,39 @@ from visualize import (
 )
 from sklearn.metrics import precision_recall_fscore_support
 
+def performOnModel(model, X_train, y_train, X_test, y_test, model_name):
+    
+    # 3. Train models
+    model.train(X_train, y_train)
+    
+    # 4. Predict
+    y_pred = model.predict(X_test)
+    
+    # 5. Evaluate & Visualize
+    print(f"=== {model_name} Results ===")
+    plot_confusion_matrix(y_test, y_pred, title=f'{model_name} Confusion Matrix')
+    print_classification_report(y_test, y_pred)
+    
+    # If you want ROC/PR curves (binary case), you need predict_proba
+    # Convert y_test to 0/1 if your data is labeled differently
+    # Example: "anomaly" => 1, "normal" => 0
+    # Make sure this aligns with your dataset
+
+    # Example: let’s assume "anomaly" == 1, "normal" == 0
+    # and we do a small conversion function:
+    def label_to_binary(y):
+        return [1 if label == 'anomaly' else 0 for label in y]
+
+    y_test_bin = label_to_binary(y_test)
+
+    # kNN proba
+    y_proba = model.predict_proba(X_test)
+    if y_proba is not None:
+        y_scores = y_proba[:, 1]
+
+        plot_roc_curve(y_test_bin, y_scores, label=model_name)
+        plot_precision_recall_curve(y_test_bin, y_scores, label=model_name)
+
 def main():
     # 1. Load / preprocess data
     X_train, X_test, y_train, y_test = load_and_preprocess_data()
@@ -32,66 +65,19 @@ def main():
     print("\ny_train head:")
     print(y_train.head())
 
-    # Uncomment the model training section
     # 2. Instantiate models
-    # knn = KNNModel(n_neighbors=5)
-    # mlp = MLPModel(hidden_layer_sizes=(64, 32), max_iter=300)
-    # rf = RFModel(n_estimators=100)
-    
-    # # 3. Train models
-    # knn.train(X_train, y_train)
-    # mlp.train(X_train, y_train)
-    # rf.train(X_train, y_train)
-    
-    # # 4. Predict
-    # y_pred_knn = knn.predict(X_test)
-    # y_pred_mlp = mlp.predict(X_test)
-    # y_pred_rf  = rf.predict(X_test)
-    
-    # # 5. Evaluate & Visualize
-    # print("=== KNN Results ===")
-    # plot_confusion_matrix(y_test, y_pred_knn, title='KNN Confusion Matrix')
-    # print_classification_report(y_test, y_pred_knn)
-    
-    # print("=== MLP Results ===")
-    # plot_confusion_matrix(y_test, y_pred_mlp, title='MLP Confusion Matrix')
-    # print_classification_report(y_test, y_pred_mlp)
-    
-    # print("=== Random Forest Results ===")
-    # plot_confusion_matrix(y_test, y_pred_rf, title='RF Confusion Matrix')
-    # print_classification_report(y_test, y_pred_rf)
-    
-    # # If you want ROC/PR curves (binary case), you need predict_proba
-    # # Convert y_test to 0/1 if your data is labeled differently
-    # # Example: "anomaly" => 1, "normal" => 0
-    # # Make sure this aligns with your dataset
+    knn = KNNModel(n_neighbors=5)
+    mlp = MLPModel(hidden_layer_sizes=(64, 32), max_iter=300)
+    rf = RFModel(n_estimators=100)
 
-    # # Example: let’s assume "anomaly" == 1, "normal" == 0
-    # # and we do a small conversion function:
-    # def label_to_binary(y):
-    #     return [1 if label == 'anomaly' else 0 for label in y]
+    model_dic = {
+        'KNN': knn, 
+        'MLP': mlp, 
+        'RF': rf
+    }
 
-    # y_test_bin = label_to_binary(y_test)
-
-    # # kNN proba
-    # y_proba_knn = knn.predict_proba(X_test)
-    # if y_proba_knn is not None:
-    #     # Probability of the "anomaly" class (index=1 if classes_ = [0,1])
-    #     y_scores_knn = y_proba_knn[:, 1]
-    #     plot_roc_curve(y_test_bin, y_scores_knn, label='kNN')
-    #     plot_precision_recall_curve(y_test_bin, y_scores_knn, label='kNN')
-    
-    # # MLP proba
-    # y_proba_mlp = mlp.predict_proba(X_test)
-    # y_scores_mlp = y_proba_mlp[:, 1]
-    # plot_roc_curve(y_test_bin, y_scores_mlp, label='MLP')
-    # plot_precision_recall_curve(y_test_bin, y_scores_mlp, label='MLP')
-    
-    # # RF proba
-    # y_proba_rf = rf.predict_proba(X_test)
-    # y_scores_rf = y_proba_rf[:, 1]
-    # plot_roc_curve(y_test_bin, y_scores_rf, label='Random Forest')
-    # plot_precision_recall_curve(y_test_bin, y_scores_rf, label='Random Forest')
+    for model_name, model in model_dic.items():
+        performOnModel(model=model, X_train=X_train, X_test=X_test, y_train=y_train, y_test=y_test, model_name=model_name)
 
 if __name__ == "__main__":
     main()
