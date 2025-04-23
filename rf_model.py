@@ -3,7 +3,7 @@
 from sklearn.ensemble import RandomForestClassifier
 
 class RFModel:
-    def __init__(self, n_estimators=100, max_depth=None, random_state=42):
+    def __init__(self, n_estimators=100, max_depth=None, random_state=42, class_weight='balanced'):
         """
         n_estimators: number of trees
         max_depth: maximum depth of trees
@@ -11,7 +11,8 @@ class RFModel:
         self.model = RandomForestClassifier(
             n_estimators=n_estimators,
             max_depth=max_depth,
-            random_state=random_state
+            random_state=random_state,
+            class_weight=class_weight
         )
         
     def train(self, X_train, y_train):
